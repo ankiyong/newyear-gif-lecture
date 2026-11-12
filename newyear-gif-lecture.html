@@ -46,7 +46,7 @@ button{font:inherit;cursor:pointer;color:inherit}
 .progress{position:fixed;top:56px;left:0;height:4px;background:var(--accent);transition:width .3s var(--ease);z-index:5}
 
 /* ---------- 무대(1280x720을 화면에 맞춰 확대·축소) ---------- */
-.stage{position:fixed;inset:60px 0 0 0;display:grid;place-items:center}
+.stage{position:fixed;inset:60px 0 0 0;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;overflow:hidden}
 .stage.with-notes{inset:60px 0 170px 0}
 .deck{width:1280px;height:720px;position:relative;transform-origin:center center}
 .slide{position:absolute;inset:0;background:var(--bg);border-radius:var(--r-lg);padding:64px 80px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 30px 60px -40px rgba(34,38,31,.6)}
