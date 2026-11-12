@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="ko" data-radius="soft">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>움직이는 연하장 강의안</title>
+<meta name="description" content="시니어 스마트폰 생성형 AI 활용 기초 — AI에게 말로 주문해 그림 한 장에서 움직이는 연하장(GIF)까지 만드는 120분 실습 강의안">
+<!-- 디자인: tasteskill 2.5 deal — palette clay-pine(가독성 때문에 1순위 paper-grey-brass 대신), type red-hat(숫자·영문) + Pretendard(한글), radius soft, 버튼 hover/press·카드 2px lift -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400..700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+@font-face{font-family:"Pretendard Local";src:url("assets/Pretendard-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"Pretendard Local";src:url("assets/Pretendard-Black.otf") format("opentype");font-weight:800 900;font-display:swap}
+:root{
+  --bg:#efe9e0; --surface:#e2d9cb; --ink:#22261f; --muted:#5a5c53;
+  --accent:#2e5b44; --accent-ink:#fff; --accent-soft:#d5e0d6;
+  --inv-bg:#22261f; --inv-surface:#2e322a; --inv-ink:#efe9e0; --inv-muted:#a19e96;
+  --warm:#b5562e; --warm-soft:#f1d9c9;
+  --line:color-mix(in oklab,var(--ink) 14%,transparent);
+  --line-strong:color-mix(in oklab,var(--ink) 30%,transparent);
+  --r-sm:8px; --r-md:12px; --r-lg:20px; --r-btn:8px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --font-num:"Red Hat Display",system-ui,sans-serif;
+  --font-ko:"Pretendard Variable","Pretendard Local",Pretendard,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#d8d0c3;color:var(--ink);font-family:var(--font-num);font-family:"Red Hat Display",var(--font-ko);font-synthesis:none;overflow:hidden}
+h1,h2,h3,p,ul,ol,figure{margin:0}
+h1,h2,h3,p,li,td,th,span,b{word-break:keep-all;overflow-wrap:break-word}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+/* ---------- 툴바 ---------- */
+.bar{position:fixed;inset:0 0 auto 0;height:56px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--inv-bg);color:var(--inv-ink);z-index:5}
+.bar .brand{font-weight:700;font-size:16px;white-space:nowrap}
+.bar .where{font-size:14px;color:var(--inv-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tool{height:38px;min-width:44px;padding:0 14px;border-radius:var(--r-btn);border:1px solid color-mix(in oklab,var(--inv-ink) 30%,transparent);background:transparent;font-size:14px;transition:background-color .18s var(--ease),transform .12s var(--ease)}
+.tool:hover{background:var(--inv-surface);transform:translateY(-1px)}
+.tool:active{transform:translateY(1px) scale(.985)}
+.tool[aria-pressed=true]{background:var(--inv-ink);color:var(--inv-bg)}
+.count{font-family:var(--font-num);font-size:15px;min-width:64px;text-align:center;color:var(--inv-ink)}
+.progress{position:fixed;top:56px;left:0;height:4px;background:var(--accent);transition:width .3s var(--ease);z-index:5}
+
+/* ---------- 무대(1280x720을 화면에 맞춰 확대·축소) ---------- */
+.stage{position:fixed;inset:60px 0 0 0;display:grid;place-items:center}
+.stage.with-notes{inset:60px 0 170px 0}
+.deck{width:1280px;height:720px;position:relative;transform-origin:center center}
+.slide{position:absolute;inset:0;background:var(--bg);border-radius:var(--r-lg);padding:64px 80px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 30px 60px -40px rgba(34,38,31,.6)}
+.slide.on{display:flex;animation:enter .45s var(--ease) both}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide.on{animation:none}}
+.slide.dark{background:var(--inv-bg);color:var(--inv-ink)}
+.slide.green{background:var(--accent);color:var(--accent-ink)}
+
+/* ---------- 글자 ---------- */
+.kicker{font-size:22px;font-weight:600;color:var(--accent);margin-bottom:18px;display:flex;gap:14px;align-items:center}
+.dark .kicker,.green .kicker{color:var(--inv-muted)}
+.green .kicker{color:#cfe0d4}
+.kicker .time{font-family:var(--font-num);font-weight:500;color:var(--muted);font-size:20px}
+.dark .kicker .time,.green .kicker .time{color:inherit;opacity:.8}
+h1{font-size:64px;line-height:1.18;font-weight:800;letter-spacing:-.02em}
+h2{font-size:48px;line-height:1.22;font-weight:800;letter-spacing:-.02em}
+h3{font-size:30px;line-height:1.3;font-weight:700}
+.lead{font-size:30px;line-height:1.5;color:var(--muted);margin-top:20px}
+.dark .lead{color:var(--inv-muted)}
+.green .lead{color:#dbe8df}
+p,li{font-size:28px;line-height:1.5}
+.num{font-family:var(--font-num);font-weight:600}
+mark{background:var(--warm-soft);color:var(--ink);padding:0 .15em;border-radius:4px}
+
+/* ---------- 부품 ---------- */
+.grow{flex:1;min-height:0}
+.row{display:flex;gap:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.card{background:#f7f3ec;border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 30px;transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.card:hover{transform:translateY(-2px);box-shadow:0 14px 32px -18px rgba(34,38,31,.45)}
+.card h3{margin-bottom:10px}
+.card p{font-size:26px;color:var(--muted)}
+.card.accent{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.card.accent p{color:#dbe8df}
+.card.warm{background:var(--warm-soft);border-color:transparent}
+.dark .card{background:var(--inv-surface);border-color:transparent;color:var(--inv-ink)}
+.dark .card p{color:var(--inv-muted)}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;padding:6px 14px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.badge.warm{background:var(--warm-soft);color:var(--warm)}
+.badge.gpt{background:var(--ink);color:var(--bg)}
+.badge.gem{background:#dfe6f3;color:#2a4a85}
+
+/* 순서 */
+.steps{display:grid;gap:14px;counter-reset:s;list-style:none;padding:0}
+.steps li{counter-increment:s;display:flex;gap:22px;align-items:center;background:#f7f3ec;border:1px solid var(--line);border-radius:var(--r-md);padding:16px 24px;font-size:28px}
+.steps li::before{content:counter(s);flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-family:var(--font-num);font-weight:700;font-size:26px}
+.steps li.now{background:var(--accent);color:#fff;border-color:transparent}
+.steps li.now::before{background:#fff;color:var(--accent)}
+.steps.h{grid-template-columns:repeat(5,1fr);gap:14px}
+.steps.h li{flex-direction:column;align-items:flex-start;gap:14px;padding:22px 20px;font-size:25px;line-height:1.35;min-height:200px}
+
+/* 시간표 */
+.table{width:100%;border-collapse:collapse}
+.table td{font-size:23px;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.table td:first-child{font-family:var(--font-num);font-weight:600;white-space:nowrap;width:150px;color:var(--muted)}
+.table td:last-child{text-align:right;white-space:nowrap}
+.table tr.rest td{color:var(--muted)}
+
+/* 그림 넣는 자리 */
+.slot{position:relative;border-radius:var(--r-lg);overflow:hidden;background:var(--surface);display:grid;place-items:center;min-height:0}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+.slot .empty{display:grid;place-items:center;gap:10px;text-align:center;padding:20px;border:3px dashed var(--line-strong);border-radius:var(--r-lg);position:absolute;inset:0;color:var(--muted)}
+.slot .empty b{font-size:24px;color:var(--ink)}
+.slot .empty code{font-size:17px;font-family:ui-monospace,Consolas,monospace;background:#f7f3ec;padding:4px 10px;border-radius:6px}
+.slot.has img{display:block;background:transparent}
+.slot.has{background:transparent}
+.slot:not(.has) img{display:none}
+.slot.has .empty{display:none}
+
+/* 계획 카드 */
+.plan{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.plan .card{padding:24px 28px}
+.plan .q{font-size:30px;font-weight:800;display:flex;align-items:center;gap:12px}
+.plan .q .num{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:22px}
+.plan .blank{margin:14px 0 10px;height:46px;border-bottom:3px solid var(--line-strong)}
+.plan .eg{font-size:22px;color:var(--muted)}
+
+/* 주문 문장 */
+.order{background:#fff;border:2px solid var(--accent);border-radius:var(--r-lg);padding:22px 28px;font-size:30px;line-height:1.5;position:relative}
+.order .tag{position:absolute;top:-16px;left:24px;font-size:18px;font-weight:700;background:var(--accent);color:#fff;padding:3px 12px;border-radius:999px}
+.order.bad{border-color:var(--line-strong);color:var(--muted)}
+.order.bad .tag{background:var(--muted)}
+
+/* 강사 준비 구간 */
+.teacher{border:3px dashed color-mix(in oklab,#2a4a85 45%,transparent);background:#eef1f7;border-radius:var(--r-lg);padding:28px 32px;display:grid;gap:12px}
+.teacher p{font-size:24px;color:#3a4a66}
+
+/* 큰 말 */
+.big{font-size:84px;line-height:1.2;font-weight:800;letter-spacing:-.03em}
+.big em{font-style:normal;color:#b9d6c2}
+.timer{font-family:var(--font-num);font-size:200px;font-weight:600;letter-spacing:-.04em;line-height:1}
+
+/* 오늘 사용할 앱 */
+.apps{display:flex;justify-content:center;align-items:center;gap:120px}
+.app{display:grid;justify-items:center;gap:26px}
+.app .logo{width:240px;height:240px;border-radius:56px;background:#fff;display:grid;place-items:center;box-shadow:0 24px 50px -30px rgba(34,38,31,.55);transition:transform .18s var(--ease)}
+.app .logo:hover{transform:translateY(-2px)}
+.app .logo img{width:140px;height:140px}
+.app p{font-size:40px;font-weight:700}
+
+/* GIF란? */
+.flip{display:flex;align-items:center;gap:28px;margin-top:30px}
+.frames{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1}
+.frames figure{position:relative}
+.frames img,.flip .result img{width:100%;display:block;border-radius:var(--r-md)}
+.frames .num{position:absolute;bottom:8px;left:8px;width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:20px}
+.flip .arrow{font-size:24px;font-weight:700;color:var(--accent);text-align:center;line-height:1.3}
+.flip .arrow span{display:block;font-size:48px}
+.flip .result{width:300px;flex:none;border:4px solid var(--accent);border-radius:calc(var(--r-md) + 4px)}
+
+/* GIF와 동영상 */
+.vs{width:100%;border-collapse:separate;border-spacing:0}
+.vs th,.vs td{font-size:28px;padding:16px 24px;text-align:left;border-bottom:1px solid var(--line)}
+.vs thead th{font-size:26px;color:var(--muted);border-bottom:2px solid var(--line-strong)}
+.vs thead th.g{color:var(--accent)}
+.vs tbody th{width:180px;color:var(--muted);font-weight:700}
+.vs td.g{background:var(--accent-soft);font-weight:700;color:var(--ink)}
+.vs tbody tr:last-child td.g{border-radius:0 0 var(--r-md) var(--r-md)}
+.vs thead th.g{background:var(--accent-soft);border-radius:var(--r-md) var(--r-md) 0 0}
+
+/* 발표자 노트 */
+.notes{position:fixed;left:0;right:0;bottom:0;height:166px;background:#fffdf8;border-top:1px solid var(--line-strong);padding:14px 24px;overflow:auto;font-size:17px;line-height:1.6;color:var(--ink);display:none;z-index:5;font-family:var(--font-ko)}
+.notes.on{display:block}
+.notes b{color:var(--accent)}
+.notes .check{color:var(--warm);font-weight:700}
+.slide aside{display:none}
+
+@media print{
+  body{overflow:visible;background:#fff}.bar,.progress,.notes{display:none!important}
+  .stage{position:static;display:block}.deck{transform:none!important;width:1280px;height:auto}
+  .slide{position:relative;display:flex!important;height:720px;margin:0 0 0;page-break-after:always;box-shadow:none;border-radius:0;animation:none}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="brand">움직이는 연하장</span>
+  <span class="where" id="where"></span>
+  <div class="tools">
+    <button class="tool" id="prev" aria-label="이전 장">‹ 이전</button>
+    <span class="count" id="count">1 / 1</span>
+    <button class="tool" id="next" aria-label="다음 장">다음 ›</button>
+    <button class="tool" id="notesBtn" aria-pressed="false">노트 (N)</button>
+    <button class="tool" id="fullBtn">전체 화면 (F)</button>
+  </div>
+</header>
+<div class="progress" id="progress"></div>
+
+<main class="stage" id="stage">
+<div class="deck" id="deck">
+
+<!-- 1 표지 -->
+<section class="slide green" data-title="표지">
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center">
+    <h1 style="font-size:76px">AI에게 말로 주문하는 법</h1>
+    <p class="lead" style="font-size:38px;margin-top:26px">그림 한 장에서 <b style="color:#fff">움직이는 연하장</b>까지</p>
+  </div>
+  <aside>인사하고 오늘 120분 동안 연하장 한 장을 직접 만들어 실제로 보낸다는 것만 먼저 말합니다.</aside>
+</section>
+
+<!-- 2 오늘 만들 것 -->
+<section class="slide" data-title="오늘 만들 것">
+  <div class="kicker">도입</div>
+  <div class="grid2 grow" style="grid-template-columns:1.05fr 1fr;align-items:stretch">
+    <figure class="slot" data-src="assets/media/finished.gif">
+      <img alt="오늘 만들 완성 연하장 예시">
+      <div class="empty"><b>완성된 연하장 GIF</b><span>이 파일을 넣으면 여기에 보입니다</span><code>assets/media/finished.gif</code></div>
+    </figure>
+    <div style="display:flex;flex-direction:column;justify-content:center;gap:22px">
+      <h2>오늘은 이걸 만들어<br>직접 보냅니다</h2>
+      <p class="lead" style="margin:0">그림 한 장에 인사말을 넣고,<br>눈이 내리듯 <b style="color:var(--ink)">움직이게</b> 만듭니다.</p>
+      <div class="row" style="gap:12px;flex-wrap:wrap"><span class="badge gem">그림 · 글자 넣기: Gemini</span><span class="badge gpt">움직이게: ChatGPT</span></div>
+    </div>
+  </div>
+  <aside>강사가 미리 만든 완성 GIF를 보여 줍니다. "끝나면 여러분 휴대폰에도 이게 하나 생깁니다."</aside>
+</section>
+
+<!-- 3 오늘 사용할 앱 -->
+<section class="slide" data-title="오늘 사용할 앱">
+  <div class="kicker">도입</div>
+  <h2>오늘 사용할 앱</h2>
+  <div class="apps grow">
+    <div class="app"><div class="logo"><img src="assets/icons/openai.svg" alt=""></div><p>ChatGPT</p></div>
+    <div class="app"><div class="logo"><img src="assets/icons/gemini.svg" alt=""></div><p>Gemini</p></div>
+  </div>
+  <aside>두 앱이 휴대폰에서 열리는지 확인합니다. 로그인이 풀린 분이 있는지 이때 봅니다. Gemini 준비 방법은 강사가 따로 안내합니다.</aside>
+</section>
+
+<!-- 5 핵심 한 마디 -->
+<section class="slide dark" data-title="오늘의 한 마디">
+  <div class="kicker">오늘 꼭 기억할 한 마디</div>
+  <div class="grow" style="display:flex;align-items:center">
+    <p class="big">AI는 말로 주문하면<br>만들어 줍니다.<br><em>자세히 말할수록</em><br>원하는 것이 나옵니다.</p>
+  </div>
+  <aside>"오늘 배우는 건 결국 이 한 문장입니다." 실습 3과 마무리에서 다시 나옵니다.</aside>
+</section>
+
+<!-- 6 연하장 살펴보기 -->
+<section class="slide" data-title="연하장 살펴보기">
+  <div class="kicker">연하장 살펴보기</div>
+  <h2>연하장에는 무엇이 들어 있을까요?</h2>
+  <div class="grid3 grow" style="margin-top:26px">
+    <figure class="slot" data-src="assets/media/example-1.png"><img alt="연하장 예시 1"><div class="empty"><b>예시 1 · 그림만</b><code>assets/media/example-1.png</code></div></figure>
+    <figure class="slot" data-src="assets/media/example-2.gif"><img alt="연하장 예시 2"><div class="empty"><b>예시 2 · 움직이는 그림</b><code>assets/media/example-2.gif</code></div></figure>
+    <figure class="slot" data-src="assets/media/example-3.gif"><img alt="연하장 예시 3"><div class="empty"><b>예시 3 · 움직이는 그림</b><code>assets/media/example-3.gif</code></div></figure>
+  </div>
+  <div class="row" style="margin-top:22px;gap:14px"><span class="badge" style="font-size:24px">① 그림</span><span class="badge" style="font-size:24px">② 인사말</span><span class="badge warm" style="font-size:24px">③ 움직임</span></div>
+  <aside>예시를 하나씩 보며 "무슨 그림이에요? 무슨 말이 써 있어요? 뭐가 움직여요?"를 물어 세 가지를 찾게 합니다.</aside>
+</section>
+
+<!-- 7 실습 1 계획 카드 -->
+<section class="slide" data-title="실습 1 · 내 연하장 계획">
+  <div class="kicker">실습 1 · 내 연하장 계획</div>
+  <h2 style="margin-bottom:24px">만들기 전에 네 가지만 정해요</h2>
+  <div class="plan grow">
+    <div class="card"><div class="q"><span class="num">1</span>누구에게?</div><div class="blank"></div><div class="eg">예) 손주, 친구, 성당 모임</div></div>
+    <div class="card"><div class="q"><span class="num">2</span>무슨 그림?</div><div class="blank"></div><div class="eg">예) 눈 덮인 초가집, 귀여운 양 한 마리</div></div>
+    <div class="card"><div class="q"><span class="num">3</span>어떤 느낌?</div><div class="blank"></div><div class="eg">예) 따뜻하게, 밝고 귀엽게, 단정하게</div></div>
+    <div class="card"><div class="q"><span class="num">4</span>어떻게 움직이게?</div><div class="blank"></div><div class="eg">예) 눈이 내리게, 글자가 반짝이게</div></div>
+  </div>
+  <aside>계획 카드를 나눠 줍니다. 여기 적은 내용이 그대로 AI에게 하는 주문이 된다고 미리 알려 줍니다.<br><span class="check">[수업 전 확인]</span> 연하장 해는 2027년 정미년(양띠)으로 가정했습니다.</aside>
+</section>
+
+<!-- 8 그림 만들기 (Gemini, 강사 준비) -->
+<section class="slide" data-title="그림 만들기 · Gemini">
+  <div class="kicker">그림 만들기</div>
+  <div class="row" style="align-items:center;gap:16px"><h2>그림 만들기</h2><span class="badge gem">Gemini</span></div>
+  <p class="lead">계획 카드의 <b style="color:var(--ink)">②무슨 그림 ③어떤 느낌</b>을 말로 주문합니다.</p>
+  <div class="teacher grow" style="margin-top:30px">
+    <h3 style="color:#2a4a85">강사 준비 구간</h3>
+    <p>Gemini 사용 방법, 시연 화면, 주문 예시를 이 자리에 채웁니다.</p>
+    <p>결과물: 연하장 그림 1장 (휴대폰에 저장)</p>
+  </div>
+  <aside>Gemini 구간은 강사가 직접 준비합니다. 이 장은 자리만 잡아 둔 것입니다.</aside>
+</section>
+
+<!-- 9 실습 2 인사말 -->
+<section class="slide" data-title="실습 2 · 인사말 정하기">
+  <div class="kicker">실습 2 · 인사말 정하기</div>
+  <h2>짧게, <mark>두 줄</mark>이면 충분해요</h2>
+  <p class="lead" style="margin-top:12px">한 줄에 15자 안팎. 길면 그림 속 글자가 깨질 수 있어요.</p>
+  <div class="grid3 grow" style="margin-top:28px">
+    <div class="card"><span class="badge">자녀 · 손주에게</span><p style="margin-top:16px;color:var(--ink)">새해 복 많이 받으렴<br>늘 건강하거라, 우리 ○○</p></div>
+    <div class="card"><span class="badge">친구에게</span><p style="margin-top:16px;color:var(--ink)">2027년에도<br>웃는 일만 가득하길</p></div>
+    <div class="card"><span class="badge">모임 분들께</span><p style="margin-top:16px;color:var(--ink)">함께해서 고마웠어요<br>새해에도 잘 부탁해요</p></div>
+  </div>
+  <p style="font-size:24px;color:var(--muted);margin-top:18px">하나를 골라 이름만 바꿔도 되고, 직접 써도 됩니다. 계획 카드에 적어 두세요.</p>
+  <aside>예시 문구표를 나눠 줍니다. 이 구간은 AI 없이 수강생이 직접 고르고 다듬습니다.</aside>
+</section>
+
+<!-- 11 그림에 인사말 넣기 (Gemini, 강사 준비) -->
+<section class="slide" data-title="그림에 인사말 넣기 · Gemini">
+  <div class="kicker">그림에 인사말 넣기</div>
+  <div class="row" style="align-items:center;gap:16px"><h2>그림에 인사말 넣기</h2><span class="badge gem">Gemini</span></div>
+  <p class="lead">실습 2에서 정한 <b style="color:var(--ink)">두 줄 인사말</b>을 그림 속에 넣습니다.</p>
+  <div class="teacher grow" style="margin-top:30px">
+    <h3 style="color:#2a4a85">강사 준비 구간</h3>
+    <p>Gemini로 글자를 넣는 방법, 시연 화면, 주문 예시를 이 자리에 채웁니다.</p>
+    <p>결과물: 인사말이 들어간 연하장 그림 1장 (휴대폰에 저장) → 다음 단계에서 ChatGPT에 올립니다</p>
+  </div>
+  <aside>Gemini 구간은 강사가 직접 준비합니다. 끝날 때 모두 그림이 휴대폰 갤러리에 저장됐는지 확인하고 넘어갑니다.</aside>
+</section>
+
+<!-- GIF란? -->
+<section class="slide" data-title="GIF란?">
+  <div class="kicker">움직이는 그림(GIF) 만들기</div>
+  <h2>GIF는 그림 여러 장을<br>빠르게 넘겨 보여 주는 파일이에요</h2>
+  <div class="flip grow">
+    <div class="frames">
+      <figure><img src="assets/media/frame-1.png" alt="1번째 장"><span class="num">1</span></figure>
+      <figure><img src="assets/media/frame-2.png" alt="2번째 장"><span class="num">2</span></figure>
+      <figure><img src="assets/media/frame-3.png" alt="3번째 장"><span class="num">3</span></figure>
+      <figure><img src="assets/media/frame-4.png" alt="4번째 장"><span class="num">4</span></figure>
+    </div>
+    <div class="arrow">빠르게<br>넘기면<span>→</span></div>
+    <figure class="result"><img src="assets/media/finished.gif" alt="움직이는 연하장"></figure>
+  </div>
+  <p style="font-size:26px;color:var(--muted);margin-top:18px">어릴 때 공책 귀퉁이에 그림을 그려 휘리릭 넘기던 것과 같은 원리예요.</p>
+  <aside>왼쪽 네 장은 눈의 위치만 조금씩 다릅니다. 이걸 빠르게 이어 보여 주면 오른쪽처럼 눈이 내리는 것처럼 보입니다. "그래서 GIF를 '움직이는 그림 파일'이라고 부릅니다."</aside>
+</section>
+
+<!-- GIF와 동영상 -->
+<section class="slide" data-title="GIF와 동영상은 뭐가 달라요?">
+  <div class="kicker">움직이는 그림(GIF) 만들기</div>
+  <h2 style="margin-bottom:28px">GIF와 동영상은 뭐가 달라요?</h2>
+  <table class="vs">
+    <thead><tr><th></th><th class="g">GIF (움직이는 그림)</th><th>동영상</th></tr></thead>
+    <tbody>
+      <tr><th>소리</th><td class="g">없어요</td><td>있어요</td></tr>
+      <tr><th>길이</th><td class="g">몇 초짜리를 계속 반복해요</td><td>길게, 처음부터 끝까지 한 번</td></tr>
+      <tr><th>보는 법</th><td class="g">열면 바로 움직여요</td><td>재생 버튼을 눌러야 해요</td></tr>
+      <tr><th>파일 크기</th><td class="g">작아서 보내기 쉬워요</td><td>커서 오래 걸릴 수 있어요</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:26px;color:var(--muted);margin-top:24px">그래서 짧은 인사를 담는 <b style="color:var(--ink)">연하장에는 GIF</b>가 잘 맞아요.</p>
+  <aside>GIF는 색을 최대 256가지까지만 써서 사진처럼 섬세한 그림은 조금 거칠어질 수 있습니다(질문이 나오면 설명). 카카오톡에서는 GIF가 사진처럼 바로 움직입니다.</aside>
+</section>
+
+<!-- 12 GIF 만들기 순서 -->
+<section class="slide" data-title="움직이는 그림 만들기 · 순서">
+  <div class="kicker">움직이는 그림(GIF) 만들기 <span class="badge gpt">ChatGPT</span></div>
+  <h2 style="margin-bottom:34px">다섯 단계면 됩니다</h2>
+  <ol class="steps h grow">
+    <li><b>ChatGPT<br>앱 열기</b></li>
+    <li><b>＋ 버튼으로<br>사진 올리기</b><span style="font-size:23px;color:var(--muted)">방금 만든 연하장</span></li>
+    <li><b>주문 쓰기</b><span style="font-size:23px;color:var(--muted)">어떻게 움직일지</span></li>
+    <li><b>결과 확인</b><span style="font-size:23px;color:var(--muted)">눌러서 움직이는지 보기</span></li>
+    <li><b>고쳐 달라고<br>다시 주문</b><span style="font-size:23px;color:var(--muted)">마음에 들 때까지</span></li>
+  </ol>
+  <aside>강사 시연 7분: 휴대폰 화면을 띄우고 1~5를 그대로 보여 줍니다. 그다음 18분 동안 수강생이 직접 합니다.<br><span class="check">[수업 전 확인]</span> 무료 계정에서 GIF 파일이 만들어지는지, 하루 한도가 얼마인지 강사 계정으로 미리 시험해 두세요.</aside>
+</section>
+
+<!-- 13 대충 vs 자세히 -->
+<section class="slide" data-title="대충 vs 자세히">
+  <div class="kicker">움직이는 그림(GIF) 만들기 · 시연</div>
+  <h2 style="margin-bottom:34px">같은 그림, 주문만 달라요</h2>
+  <div class="grid2 grow">
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div class="order bad"><span class="tag">대충 주문</span>“움직이게 해 줘.”</div>
+      <figure class="slot" data-src="assets/media/compare-rough.gif" style="flex:1"><img alt="대충 주문한 결과"><div class="empty"><b>대충 주문한 결과</b><code>assets/media/compare-rough.gif</code></div></figure>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div class="order"><span class="tag">자세히 주문</span>“위에서 하얀 눈이 <b>천천히</b> 내리게 하고, 글자는 <b>은은하게 반짝</b>이게 해 줘.”</div>
+      <figure class="slot" data-src="assets/media/compare-detail.gif" style="flex:1"><img alt="자세히 주문한 결과"><div class="empty"><b>자세히 주문한 결과</b><code>assets/media/compare-detail.gif</code></div></figure>
+    </div>
+  </div>
+  <aside>핵심 메시지 "자세히 말할수록 원하는 것이 나온다"를 여기서 처음 보여 줍니다. <span class="check">[수업 전 확인]</span> 지금 두 그림은 설명용으로 직접 그린 예시입니다. ChatGPT로 실제 만든 결과로 바꿔 넣으면 더 설득력 있습니다(같은 파일 이름으로 덮어쓰기).</aside>
+</section>
+
+<!-- 14 주문 문장 따라 쓰기 -->
+<section class="slide" data-title="주문 문장 따라 쓰기">
+  <div class="kicker">움직이는 그림(GIF) 만들기 · 실습 3</div>
+  <h2 style="margin-bottom:34px">이렇게 따라 써 보세요</h2>
+  <div class="grow" style="display:grid;gap:30px;align-content:start">
+    <div class="order"><span class="tag">기본</span>이 그림을 움직이는 GIF로 만들어 줘. 위에서 하얀 눈이 천천히 내리게 해 줘.</div>
+    <div class="order"><span class="tag">글자 강조</span>이 연하장을 GIF로 만들어 줘. 글자가 은은하게 반짝이게 하고, 3초 동안 반복되게 해 줘.</div>
+    <div class="order" style="border-color:var(--warm)"><span class="tag" style="background:var(--warm)">고쳐 달라고 할 때</span>눈을 더 크게, 더 천천히 내리게 바꿔 줘. &nbsp;/&nbsp; 너무 빨라. 반만 빠르게 해 줘.</div>
+  </div>
+  <aside>계획 카드 ④ "어떻게 움직이게"에 적은 말을 넣어 주문하게 합니다. 결과를 보고 한 번 이상 "고쳐 달라고" 해 보게 합니다.</aside>
+</section>
+
+<!-- 15 잘 되는 움직임 -->
+<section class="slide" data-title="잘 되는 움직임">
+  <div class="kicker">움직이는 그림(GIF) 만들기 · 알아 두기</div>
+  <h2 style="margin-bottom:30px">이런 움직임이 잘 됩니다</h2>
+  <div class="grid2 grow">
+    <div class="card accent"><h3>잘 되는 것</h3><ul style="padding-left:30px;margin-top:10px"><li>눈이나 꽃잎이 내리기</li><li>글자가 반짝이기</li><li>그림이 살짝 커졌다 작아지기</li><li>반짝이는 별 더하기</li></ul></div>
+    <div class="card"><h3>잘 안 될 수 있는 것</h3><ul style="padding-left:30px;margin-top:10px;color:var(--muted)"><li>사람이 손을 흔들기</li><li>동물이 걸어가기</li><li>그림 속 물건이 진짜처럼 움직이기</li></ul></div>
+  </div>
+  <p style="font-size:24px;color:var(--muted);margin-top:18px">그림 <b style="color:var(--ink)">위에 무언가를 더하는</b> 움직임이 가장 잘 됩니다.</p>
+  <aside><span class="check">[수업 전 확인]</span> 실제로 어떤 효과까지 되는지 미리 시험해 보고 목록을 고치세요.</aside>
+</section>
+
+<!-- 16 막혔을 때 -->
+<section class="slide" data-title="막혔을 때">
+  <div class="kicker">움직이는 그림(GIF) 만들기 · 막혔을 때</div>
+  <h2 style="margin-bottom:30px">안 돼도 괜찮아요</h2>
+  <div class="grid3 grow">
+    <div class="card"><span class="badge warm">이런 말이 나오면</span><h3 style="margin-top:16px">“나중에 다시 시도해 주세요”</h3><p>오늘 사용할 수 있는 양을 다 쓴 것입니다. 손을 들어 주세요.</p></div>
+    <div class="card"><span class="badge warm">이럴 땐</span><h3 style="margin-top:16px">사진이 안 올라가요</h3><p>＋ 버튼 → 사진을 다시 골라 보세요. 그래도 안 되면 옆 사람과 함께 봐요.</p></div>
+    <div class="card accent"><span class="badge" style="background:#fff">강사가 도와드려요</span><h3 style="margin-top:16px">미리 만든 연하장을 받아 가세요</h3><p>강사가 카카오톡으로 보내 드립니다. 저장하고 보내기는 똑같이 해요.</p></div>
+  </div>
+  <aside>B안: 일부만 막히면 성공한 옆 사람 화면으로 같이 보고, 전체가 막히면 인사말을 넣은 그림 한 장을 결과물로 하고 GIF는 강사 시연으로 대신합니다. 무료 GIF 앱 대안은 강사가 사전에 정합니다.</aside>
+</section>
+
+<!-- 17 저장하고 보내기 -->
+<section class="slide" data-title="실습 4 · 저장하고 보내기">
+  <div class="kicker">실습 4 · 저장하고 보내기</div>
+  <h2 style="margin-bottom:26px">휴대폰에 저장하고, 보내 봐요</h2>
+  <div class="grid3 grow">
+    <div class="card"><span class="badge">1. 저장하기</span><p style="margin-top:16px;color:var(--ink)">ChatGPT가 준 파일을 눌러<br><b>저장</b>합니다.</p></div>
+    <div class="card"><span class="badge">2. 찾아보기</span><p style="margin-top:16px;color:var(--ink)"><b>갤러리</b>나 <b>파일</b> 앱에서 방금 저장한 연하장을 찾아요.</p></div>
+    <div class="card accent"><span class="badge" style="background:#fff">3. 보내기</span><p style="margin-top:16px">카카오톡에서 받을 사람을 고르고 ＋ → <b style="color:#fff">앨범</b>에서 연하장을 보내요.</p></div>
+  </div>
+  <p style="font-size:24px;color:var(--muted);margin-top:18px">받은 분 휴대폰에서도 움직이는지 함께 확인해 봐요.</p>
+  <aside>안드로이드와 아이폰의 저장 위치를 각각 시연합니다. 보낼 사람이 없으면 강사에게 보내게 합니다.<br><span class="check">[수업 전 확인]</span> 저장한 GIF가 갤러리에서 움직이는지, 카카오톡으로 보냈을 때 움직이는지 두 기종 모두 시험해 두세요.</aside>
+</section>
+
+<!-- 18 마무리 -->
+<section class="slide green" data-title="마무리">
+  <div class="kicker">마무리</div>
+  <h2>오늘 배운 주문 요령</h2>
+  <div class="grid3 grow" style="margin-top:34px">
+    <div class="card" style="background:rgba(255,255,255,.1);border-color:transparent;color:#fff"><p class="num" style="font-size:44px;color:#fff">1</p><h3 style="margin-top:8px">무엇을</h3><p style="color:#dbe8df">눈 덮인 초가집, 양 한 마리</p></div>
+    <div class="card" style="background:rgba(255,255,255,.1);border-color:transparent;color:#fff"><p class="num" style="font-size:44px;color:#fff">2</p><h3 style="margin-top:8px">어떤 느낌으로</h3><p style="color:#dbe8df">따뜻하게, 밝고 귀엽게</p></div>
+    <div class="card" style="background:rgba(255,255,255,.1);border-color:transparent;color:#fff"><p class="num" style="font-size:44px;color:#fff">3</p><h3 style="margin-top:8px">어떻게 움직이게</h3><p style="color:#dbe8df">눈이 천천히 내리게</p></div>
+  </div>
+  <p style="font-size:30px;margin-top:26px">집에서도 순서표를 보며 한 번 더 만들어 보세요.</p>
+  <aside>"자세히 말할수록 원하는 것이 나온다"를 다시 말하고, 집에서 다시 해 보기 순서표를 나눠 줍니다.</aside>
+</section>
+
+</div>
+</main>
+<div class="notes" id="notes"></div>
+
+<script>
+(() => {
+  const deck = document.getElementById('deck');
+  const stage = document.getElementById('stage');
+  const slides = [...deck.querySelectorAll('.slide')];
+  const notes = document.getElementById('notes');
+  const notesBtn = document.getElementById('notesBtn');
+  let i = 0;
+
+  // 그림 자리: 파일이 있으면 보여 주고, 없으면 빈 자리 안내
+  document.querySelectorAll('.slot[data-src]').forEach(s => {
+    const img = s.querySelector('img');
+    img.onload = () => s.classList.add('has');
+    img.onerror = () => s.classList.remove('has');
+    img.src = s.dataset.src;
+  });
+
+  function fit() {
+    const r = stage.getBoundingClientRect();
+    const k = Math.min((r.width - 32) / 1280, (r.height - 32) / 720);
+    deck.style.transform = `scale(${Math.max(k, 0.1)})`;
+  }
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('on', k === i));
+    document.getElementById('count').textContent = `${i + 1} / ${slides.length}`;
+    document.getElementById('where').textContent = slides[i].dataset.title || '';
+    document.getElementById('progress').style.width = `${(i + 1) / slides.length * 100}%`;
+    const a = slides[i].querySelector('aside');
+    notes.innerHTML = `<b>${i + 1}. ${slides[i].dataset.title}</b> — ${a ? a.innerHTML : '노트 없음'}`;
+    history.replaceState(null, '', `#${i + 1}`);
+  }
+  function toggleNotes() {
+    const on = !notes.classList.contains('on');
+    notes.classList.toggle('on', on);
+    stage.classList.toggle('with-notes', on);
+    notesBtn.setAttribute('aria-pressed', on);
+    fit();
+  }
+  function full() {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.();
+  }
+  document.getElementById('prev').onclick = () => show(i - 1);
+  document.getElementById('next').onclick = () => show(i + 1);
+  notesBtn.onclick = toggleNotes;
+  document.getElementById('fullBtn').onclick = full;
+  addEventListener('keydown', e => {
+    if (e.target.closest('input,textarea')) return;
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key.toLowerCase() === 'n') toggleNotes();
+    else if (e.key.toLowerCase() === 'f') full();
+  });
+  addEventListener('resize', fit);
+
+  const h = parseInt(location.hash.slice(1), 10);
+  fit(); show(Number.isFinite(h) ? h - 1 : 0);
+})();
+</script>
+</body>
+</html>
